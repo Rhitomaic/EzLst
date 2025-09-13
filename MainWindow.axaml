@@ -14,29 +14,25 @@
                 <Label FontSize="12">by Rhitomaic</Label>
             </StackPanel>
             <Label>Select an LST file or directory to convert</Label>
-            <!-- Dropdown for File or Directory -->
+
             <ComboBox x:Name="ModeComboBox" SelectedIndex="0" HorizontalAlignment="Stretch">
                 <ComboBoxItem Content="File"/>
                 <ComboBoxItem Content="Directory"/>
             </ComboBox>
 
-            <!-- Path selection row -->
             <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="5">
                 <TextBlock Text="Path:" VerticalAlignment="Center"/>
                 <TextBox Grid.Column="1" x:Name="PathTextBox"/>
                 <Button Grid.Column="2" x:Name="BrowseButton" Content="Browse..."/>
             </Grid>
 
-            <!-- Checkbox for custom output path -->
             <Grid ColumnSpacing="8" RowDefinitions="Auto, Auto, *">
                 <CheckBox x:Name="CustomOutputCheckBox" Content="Use custom output path"/>
                 <Label Grid.Row="1" IsVisible="{Binding IsChecked, ElementName=CustomOutputCheckBox}">Change the output path for the xlsx to be placed</Label>
                 <TextBox Grid.Row="2" x:Name="OutputPathTextBox" IsVisible="{Binding IsChecked, ElementName=CustomOutputCheckBox}"/>
             </Grid>
 
-            <!-- Convert button -->
             <Button x:Name="ConvertButton" Content="Convert" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-            
         </StackPanel>
         <Border Grid.Row="1" Padding="20,0">
         <TextBlock x:Name="StatusLabel">Start converting!</TextBlock>
