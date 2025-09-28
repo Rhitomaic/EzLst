@@ -6,7 +6,11 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
     </PropertyGroup>
+    <ItemGroup>
+      <Content Include="Assets\app_icon.ico" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.2" />
@@ -19,9 +23,5 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="ClosedXML" Version="0.105.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Assets/" />
     </ItemGroup>
 </Project>

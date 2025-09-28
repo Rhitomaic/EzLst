@@ -182,12 +182,18 @@ public static class LstConverter
                         return $"[{split[1].Trim()}] <- A";
                     case "INX":
                         return $"[{split[1].Trim()}] <- [{split[1].Trim()}] + 1";
+                    case "DCX":
+                        return $"[{split[1].Trim()}] <- [{split[1].Trim()}] - 1";
                     case "XCHG":
                         return "HL <-> DE";
                     case "SHLD":
-                        return $"(addr {split[1].Trim()}H) <- L, (addr+1) <- H";
+                        return $"{split[1].Trim()}H <- HL";
                     case "LHLD":
-                        return $"L <- [{split[1].Trim()}H], H <- [{split[1].Trim()}H+1]";
+                        return $"HL <- [{split[1].Trim()}H]";
+                    case "SBB":
+                        return $"A <- A - {split[1].Trim()} - CY";
+                    case "DCR":
+                        return $"{split[1].Trim()} <- {split[1].Trim()} - 1";
 
                     // 8-bit operations
                     case "MOV":
@@ -204,10 +210,15 @@ public static class LstConverter
                         return $"A <- A - {split[1].Trim()}H";
                     case "CPI":
                         return $"A <- A = {split[1].Trim()}H";
+                    case "CMP":
+                        return $"A - {split[1].Trim()}";
+                    case "INR":
+                        return $"{split[1].Trim()} <- {split[1].Trim()} + 1";
 
                     // Jump
                     case "JMP":
                     case "JC":
+                    case "JNC":
                     case "JZ":
                     case "JNZ":
                         return $"-> {split[1].Trim()}";
@@ -222,6 +233,10 @@ public static class LstConverter
                 {
                     case "HLT":
                         return "Stop";
+                    case "STC":
+                        return "CY <- 1";
+                    case "CMC":
+                        return "CY <- !CY";
                     default:
                         return "-";
                 }
