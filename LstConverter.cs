@@ -186,6 +186,10 @@ public static class LstConverter
                         return $"[{split[1].Trim()}] <- [{split[1].Trim()}] - 1";
                     case "XCHG":
                         return "HL <-> DE";
+                    case "SPHL":
+                        return "SP <- HL";
+                    case "PCHL":
+                        return "PC <- HL";
                     case "SHLD":
                         return $"{split[1].Trim()}H <- HL";
                     case "LHLD":
@@ -194,6 +198,8 @@ public static class LstConverter
                         return $"A <- A - {split[1].Trim()} - CY";
                     case "DCR":
                         return $"{split[1].Trim()} <- {split[1].Trim()} - 1";
+                    case "DAD":
+                        return $"HL <- HL + {split[1].Trim()}";
 
                     // 8-bit operations
                     case "MOV":
@@ -214,14 +220,44 @@ public static class LstConverter
                         return $"A - {split[1].Trim()}";
                     case "INR":
                         return $"{split[1].Trim()} <- {split[1].Trim()} + 1";
+                    case "ANA":
+                        return $"A <- A & {split[1].Trim()}";
+                    case "ORA":
+                        return $"A <- A | {split[1].Trim()}";
+                    case "ORI":
+                        return $"A <- A | {split[1].Trim()}H";
+                    case "XRA":
+                        return $"A <- A ^ {split[1].Trim()}";
+                    case "XRI":
+                        return $"A <- A ^ {split[1].Trim()}H";
+                    case "SBI":
+                        return $"A <- A - {split[1].Trim()}H - CY";
+
+                    // Rotates
+                    case "RLC":
+                        return "A <- A << 1";
+                    case "RRC":
+                        return "A <- A >> 1";
+                    case "RAL":
+                        return "A <- A << 1 + CY";
+                    case "RAR":
+                        return "A <- A >> 1 + CY";
 
                     // Jump
                     case "JMP":
-                    case "JC":
-                    case "JNC":
-                    case "JZ":
-                    case "JNZ":
                         return $"-> {split[1].Trim()}";
+                    case "JC":
+                        return $"CY = 1 -> {split[1].Trim()}";
+                    case "JNC":
+                        return $"CY = 0 -> {split[1].Trim()}";
+                    case "JZ":
+                        return $"Z = 1 -> {split[1].Trim()}";
+                    case "JNZ":
+                        return $"Z = 0 -> {split[1].Trim()}";
+                    case "JP":
+                        return $"S = 0 -> {split[1].Trim()}";
+                    case "JM":
+                        return $"S = 1 -> {split[1].Trim()}";
 
                     default:
                         return "-";
