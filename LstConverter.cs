@@ -168,7 +168,7 @@ public static class LstConverter
             var split = mnemonic.Split(' ');
             if (split.Length > 1)
             {
-                switch (split[0].ToUpper())
+                switch (split[0].ToUpper().Trim())
                 {
                     // 16-bit operations
                     case "LXI":
@@ -209,11 +209,17 @@ public static class LstConverter
                         parameters = split[1].Split(',');
                         return $"{parameters[0].Trim()} <- {parameters[1].Trim()}H";
                     case "ADD":
-                        return $"A <- A + {split[1].Trim()}H";
+                        return $"A <- A + {split[1].Trim()}";
+                    case "ADC":
+                        return $"A <- A + {split[1].Trim()} + CY";
+                    case "ACI":
+                        return $"A <- A + {split[1].Trim()} + CY";
                     case "ANI":
                         return $"A <- A & {split[1].Trim()}H";
                     case "SUI":
                         return $"A <- A - {split[1].Trim()}H";
+                    case "SUB":
+                        return $"A <- A - {split[1].Trim()}";
                     case "CPI":
                         return $"A <- A = {split[1].Trim()}H";
                     case "CMP":
@@ -265,8 +271,17 @@ public static class LstConverter
             }
             else
             {
-                switch (mnemonic.ToUpper())
-                {
+                switch (mnemonic.ToUpper()) {
+                    // Rotates
+                    case "RLC":
+                        return "A <- A << 1";
+                    case "RRC":
+                        return "A <- A >> 1";
+                    case "RAL":
+                        return "A <- A << 1 + CY";
+                    case "RAR":
+                        return "A <- A >> 1 + CY";
+
                     case "HLT":
                         return "Stop";
                     case "STC":
