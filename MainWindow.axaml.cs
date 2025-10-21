@@ -67,10 +67,20 @@ public partial class MainWindow : Window
             ConvertButton.IsEnabled = false;
 
             await Task.Run(() =>
-                LstConverter.Convert(inputPath, customOutput, msg =>
-                    Dispatcher.UIThread.Post(() => StatusLabel.Text = msg)
-                )
-            );
+            {
+                if (inputPath.Contains("lss"))
+                {
+                    LssConverter.Convert(inputPath, customOutput, msg =>
+                        Dispatcher.UIThread.Post(() => StatusLabel.Text = msg)
+                    );
+                }
+                else
+                {
+                    LstConverter.Convert(inputPath, customOutput, msg =>
+                        Dispatcher.UIThread.Post(() => StatusLabel.Text = msg)
+                    );
+                }
+            });
 
             Dispatcher.UIThread.Post(() =>
             {
