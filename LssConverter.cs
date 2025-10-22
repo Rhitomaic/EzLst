@@ -8,84 +8,152 @@ public class AvrInstructionInfo
     public string Mnemonic { get; set; }
     public string Operands { get; set; }
     public string Description { get; set; }
-    public string Operation { get; set; }
+
+    // Option 1: Dynamic operation generator
+    public Func<string, string>? OperationFunc { get; set; }
+
+    // Option 2: Keep static fallback
+    public string? OperationTemplate { get; set; }
+
     public string FlagsAffected { get; set; }
+
+    public string GetOperation(string line)
+        => OperationFunc?.Invoke(line) ?? OperationTemplate ?? string.Empty;
 }
 
 public static class AvrInstructionTable
 {
     public static readonly Dictionary<string, AvrInstructionInfo> Mnemonics = new()
     {
+        
         ["ADD"] = new AvrInstructionInfo
         {
             Mnemonic = "ADD",
             Operands = "Rd, Rr",
-            Description = "Add without carry",
-            Operation = "Rd ← Rd + Rr",
+            Description = "Add without Carry",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} + {parts[2]}";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["ADC"] = new AvrInstructionInfo
         {
             Mnemonic = "ADC",
             Operands = "Rd, Rr",
-            Description = "Add with carry",
-            Operation = "Rd ← Rd + Rr + C",
+            Description = "Add with Carry",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} + {parts[2]} + C";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["ADIW"] = new AvrInstructionInfo
         {
             Mnemonic = "ADIW",
-            Operands = "Rd+1:Rd, K",
-            Description = "Add immediate to word",
-            Operation = "R[d+1]:Rd ← R[d+1]:Rd + K",
+            Operands = "Rd, K",
+            Description = "Add Immediate to Word",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R[{parts[1]}+1]:{parts[1]} ← R[{parts[1]}+1]:{parts[1]} + {parts[2]}";
+            },
             FlagsAffected = "Z,C,N,V,S"
         },
         ["SUB"] = new AvrInstructionInfo
         {
             Mnemonic = "SUB",
             Operands = "Rd, Rr",
-            Description = "Subtract without carry",
-            Operation = "Rd ← Rd - Rr",
+            Description = "Subtract without Carry",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} - {parts[2]}";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["SUBI"] = new AvrInstructionInfo
         {
             Mnemonic = "SUBI",
             Operands = "Rd, K",
-            Description = "Subtract immediate",
-            Operation = "Rd ← Rd - K",
+            Description = "Subtract Immediate",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} - {parts[2]}";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["SBC"] = new AvrInstructionInfo
         {
             Mnemonic = "SBC",
             Operands = "Rd, Rr",
-            Description = "Subtract with carry",
-            Operation = "Rd ← Rd - Rr - C",
+            Description = "Subtract with Carry",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} - {parts[2]} - C";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["SBCI"] = new AvrInstructionInfo
         {
             Mnemonic = "SBCI",
             Operands = "Rd, K",
-            Description = "Subtract immediate with carry",
-            Operation = "Rd ← Rd - K - C",
+            Description = "Subtract Immediate with Carry",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} - {parts[2]} - C";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
+        },
+        ["SBIW"] = new AvrInstructionInfo
+        {
+            Mnemonic = "SBIW",
+            Operands = "Rd, K",
+            Description = "Subtract Immediate from Word",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R[{parts[1]}+1]:{parts[1]} ← R[{parts[1]}+1]:{parts[1]} - {parts[2]}";
+            },
+            FlagsAffected = "Z,C,N,V,S"
         },
         ["AND"] = new AvrInstructionInfo
         {
             Mnemonic = "AND",
             Operands = "Rd, Rr",
             Description = "Logical AND",
-            Operation = "Rd ← Rd ∧ Rr",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ∧ {parts[2]}";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["ANDI"] = new AvrInstructionInfo
         {
             Mnemonic = "ANDI",
             Operands = "Rd, K",
-            Description = "Logical AND with immediate",
-            Operation = "Rd ← Rd ∧ K",
+            Description = "Logical AND with Immediate",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ∧ {parts[2]}";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["OR"] = new AvrInstructionInfo
@@ -93,7 +161,25 @@ public static class AvrInstructionTable
             Mnemonic = "OR",
             Operands = "Rd, Rr",
             Description = "Logical OR",
-            Operation = "Rd ← Rd ∨ Rr",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ∨ {parts[2]}";
+            },
+            FlagsAffected = "Z,N,V,S"
+        },
+        ["ORI"] = new AvrInstructionInfo
+        {
+            Mnemonic = "ORI",
+            Operands = "Rd, K",
+            Description = "Logical OR with Immediate",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ∨ {parts[2]}";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["EOR"] = new AvrInstructionInfo
@@ -101,39 +187,64 @@ public static class AvrInstructionTable
             Mnemonic = "EOR",
             Operands = "Rd, Rr",
             Description = "Exclusive OR",
-            Operation = "Rd ← Rd ⊕ Rr",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ⊕ {parts[2]}";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["COM"] = new AvrInstructionInfo
         {
             Mnemonic = "COM",
             Operands = "Rd",
-            Description = "One’s complement",
-            Operation = "Rd ← 0xFF - Rd",
+            Description = "One’s Complement",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"{parts[1]} ← 0xFF - {parts[1]}";
+            },
             FlagsAffected = "Z,C,N,V,S"
         },
         ["NEG"] = new AvrInstructionInfo
         {
             Mnemonic = "NEG",
             Operands = "Rd",
-            Description = "Two’s complement",
-            Operation = "Rd ← 0x00 - Rd",
+            Description = "Two’s Complement",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"{parts[1]} ← 0x00 - {parts[1]}";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["SBR"] = new AvrInstructionInfo
         {
             Mnemonic = "SBR",
             Operands = "Rd, K",
-            Description = "Set bit(s) in register",
-            Operation = "Rd ← Rd ∨ K",
+            Description = "Set Bit(s) in Register",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ∨ {parts[2]}";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["CBR"] = new AvrInstructionInfo
         {
             Mnemonic = "CBR",
             Operands = "Rd, K",
-            Description = "Clear bit(s) in register",
-            Operation = "Rd ← Rd ∧ (0xFF - K)",
+            Description = "Clear Bit(s) in Register",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ∧ (0xFF - {parts[2]})";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["INC"] = new AvrInstructionInfo
@@ -141,7 +252,12 @@ public static class AvrInstructionTable
             Mnemonic = "INC",
             Operands = "Rd",
             Description = "Increment",
-            Operation = "Rd ← Rd + 1",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} + 1";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["DEC"] = new AvrInstructionInfo
@@ -149,31 +265,51 @@ public static class AvrInstructionTable
             Mnemonic = "DEC",
             Operands = "Rd",
             Description = "Decrement",
-            Operation = "Rd ← Rd - 1",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} - 1";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["TST"] = new AvrInstructionInfo
         {
             Mnemonic = "TST",
             Operands = "Rd",
-            Description = "Test for zero or minus",
-            Operation = "Rd ← Rd ∧ Rd",
+            Description = "Test for Zero or Minus",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ∧ {parts[1]}";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["CLR"] = new AvrInstructionInfo
         {
             Mnemonic = "CLR",
             Operands = "Rd",
-            Description = "Clear register",
-            Operation = "Rd ← Rd ⊕ Rd",
+            Description = "Clear Register",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"{parts[1]} ← {parts[1]} ⊕ {parts[1]}";
+            },
             FlagsAffected = "Z,N,V,S"
         },
         ["SER"] = new AvrInstructionInfo
         {
             Mnemonic = "SER",
             Operands = "Rd",
-            Description = "Set register",
-            Operation = "Rd ← 0xFF",
+            Description = "Set Register",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"{parts[1]} ← 0xFF";
+            },
             FlagsAffected = "None"
         },
         ["MUL"] = new AvrInstructionInfo
@@ -181,7 +317,12 @@ public static class AvrInstructionTable
             Mnemonic = "MUL",
             Operands = "Rd, Rr",
             Description = "Multiply Unsigned",
-            Operation = "R1:R0 ← Rd × Rr (UU)",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R1:R0 ← {parts[1]} × {parts[2]}";
+            },
             FlagsAffected = "Z,C"
         },
         ["MULS"] = new AvrInstructionInfo
@@ -189,7 +330,12 @@ public static class AvrInstructionTable
             Mnemonic = "MULS",
             Operands = "Rd, Rr",
             Description = "Multiply Signed",
-            Operation = "R1:R0 ← Rd × Rr (SS)",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R1:R0 ← {parts[1]} × {parts[2]}";
+            },
             FlagsAffected = "Z,C"
         },
         ["MULSU"] = new AvrInstructionInfo
@@ -197,7 +343,12 @@ public static class AvrInstructionTable
             Mnemonic = "MULSU",
             Operands = "Rd, Rr",
             Description = "Multiply Signed with Unsigned",
-            Operation = "R1:R0 ← Rd × Rr (SU)",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R1:R0 ← {parts[1]} × {parts[2]}";
+            },
             FlagsAffected = "Z,C"
         },
         ["FMUL"] = new AvrInstructionInfo
@@ -205,7 +356,12 @@ public static class AvrInstructionTable
             Mnemonic = "FMUL",
             Operands = "Rd, Rr",
             Description = "Fractional Multiply Unsigned",
-            Operation = "R1:R0 ← (Rd × Rr) << 1 (UU)",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R1:R0 ← ({parts[1]} × {parts[2]}) << 1";
+            },
             FlagsAffected = "Z,C"
         },
         ["FMULS"] = new AvrInstructionInfo
@@ -213,31 +369,53 @@ public static class AvrInstructionTable
             Mnemonic = "FMULS",
             Operands = "Rd, Rr",
             Description = "Fractional Multiply Signed",
-            Operation = "R1:R0 ← (Rd × Rr) << 1 (SS)",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R1:R0 ← ({parts[1]} × {parts[2]}) << 1";
+            },
             FlagsAffected = "Z,C"
         },
         ["FMULSU"] = new AvrInstructionInfo
         {
             Mnemonic = "FMULSU",
             Operands = "Rd, Rr",
-            Description = "Fractional Multiply Signed with Unsigned",
-            Operation = "R1:R0 ← (Rd × Rr) << 1 (SU)",
+            Description = "Fractional Multiply Signed/Unsigned",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"R1:R0 ← ({parts[1]} × {parts[2]}) << 1";
+            },
             FlagsAffected = "Z,C"
         },
         ["DES"] = new AvrInstructionInfo
         {
             Mnemonic = "DES",
             Operands = "K",
-            Description = "Data Encryption / Decryption",
-            Operation = "if (H=0) then R15:R0 ← Encrypt(R15:R0, K) else R15:R0 ← Decrypt(R15:R0, K)",
+            Description = "Data Encryption",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"Encrypt/Decrypt(R15:R0, {parts[1]})";
+            },
             FlagsAffected = "None"
         },
-        ["RJMP"] = new AvrInstructionInfo
+        
+        // Uh, branch?
+         ["RJMP"] = new AvrInstructionInfo
         {
             Mnemonic = "RJMP",
             Operands = "k",
             Description = "Relative Jump",
-            Operation = "PC ← PC + k + 1",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"PC ← PC + {parts[1]} + 1";
+            },
             FlagsAffected = "None"
         },
         ["IJMP"] = new AvrInstructionInfo
@@ -245,7 +423,10 @@ public static class AvrInstructionTable
             Mnemonic = "IJMP",
             Operands = "—",
             Description = "Indirect Jump (Z)",
-            Operation = "PC ← Z",
+            OperationFunc = mnemonic =>
+            {
+                return "PC ← Z";
+            },
             FlagsAffected = "None"
         },
         ["EIJMP"] = new AvrInstructionInfo
@@ -253,7 +434,10 @@ public static class AvrInstructionTable
             Mnemonic = "EIJMP",
             Operands = "—",
             Description = "Extended Indirect Jump",
-            Operation = "PC ← EIND:Z",
+            OperationFunc = mnemonic =>
+            {
+                return "PC ← EIND:Z";
+            },
             FlagsAffected = "None"
         },
         ["JMP"] = new AvrInstructionInfo
@@ -261,7 +445,12 @@ public static class AvrInstructionTable
             Mnemonic = "JMP",
             Operands = "k",
             Description = "Jump",
-            Operation = "PC ← k",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"PC ← {parts[1]}";
+            },
             FlagsAffected = "None"
         },
         ["RCALL"] = new AvrInstructionInfo
@@ -269,7 +458,12 @@ public static class AvrInstructionTable
             Mnemonic = "RCALL",
             Operands = "k",
             Description = "Relative Call Subroutine",
-            Operation = "PC ← PC + k + 1",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"PC ← PC + {parts[1]} + 1";
+            },
             FlagsAffected = "None"
         },
         ["ICALL"] = new AvrInstructionInfo
@@ -277,7 +471,10 @@ public static class AvrInstructionTable
             Mnemonic = "ICALL",
             Operands = "—",
             Description = "Indirect Call (Z)",
-            Operation = "PC ← Z",
+            OperationFunc = mnemonic =>
+            {
+                return "PC ← Z";
+            },
             FlagsAffected = "None"
         },
         ["EICALL"] = new AvrInstructionInfo
@@ -285,7 +482,10 @@ public static class AvrInstructionTable
             Mnemonic = "EICALL",
             Operands = "—",
             Description = "Extended Indirect Call",
-            Operation = "PC ← EIND:Z",
+            OperationFunc = mnemonic =>
+            {
+                return "PC ← EIND:Z";
+            },
             FlagsAffected = "None"
         },
         ["CALL"] = new AvrInstructionInfo
@@ -293,7 +493,12 @@ public static class AvrInstructionTable
             Mnemonic = "CALL",
             Operands = "k",
             Description = "Call Subroutine",
-            Operation = "PC ← k",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) return mnemonic;
+                return $"PC ← {parts[1]}";
+            },
             FlagsAffected = "None"
         },
         ["RET"] = new AvrInstructionInfo
@@ -301,7 +506,10 @@ public static class AvrInstructionTable
             Mnemonic = "RET",
             Operands = "—",
             Description = "Subroutine Return",
-            Operation = "PC ← STACK",
+            OperationFunc = mnemonic =>
+            {
+                return "PC ← STACK";
+            },
             FlagsAffected = "None"
         },
         ["RETI"] = new AvrInstructionInfo
@@ -309,17 +517,23 @@ public static class AvrInstructionTable
             Mnemonic = "RETI",
             Operands = "—",
             Description = "Interrupt Return",
-            Operation = "PC ← STACK",
+            OperationFunc = mnemonic =>
+            {
+                return "PC ← STACK";
+            },
             FlagsAffected = "I"
         },
-
-// Compare and Skip Instructions
         ["CPSE"] = new AvrInstructionInfo
         {
             Mnemonic = "CPSE",
             Operands = "Rd, Rr",
             Description = "Compare, Skip if Equal",
-            Operation = "if (Rd == Rr) skip next instruction",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"if ({parts[1]} == {parts[2]}) skip next";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["CP"] = new AvrInstructionInfo
@@ -327,7 +541,12 @@ public static class AvrInstructionTable
             Mnemonic = "CP",
             Operands = "Rd, Rr",
             Description = "Compare",
-            Operation = "Rd - Rr",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} - {parts[2]}";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["CPC"] = new AvrInstructionInfo
@@ -335,7 +554,12 @@ public static class AvrInstructionTable
             Mnemonic = "CPC",
             Operands = "Rd, Rr",
             Description = "Compare with Carry",
-            Operation = "Rd - Rr - C",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} - {parts[2]} - C";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
         ["CPI"] = new AvrInstructionInfo
@@ -343,156 +567,15 @@ public static class AvrInstructionTable
             Mnemonic = "CPI",
             Operands = "Rd, K",
             Description = "Compare with Immediate",
-            Operation = "Rd - K",
+            OperationFunc = mnemonic =>
+            {
+                var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 3) return mnemonic;
+                return $"{parts[1]} - {parts[2]}";
+            },
             FlagsAffected = "Z,C,N,V,S,H"
         },
-
-        ["SBRC"] = new AvrInstructionInfo
-        {
-            Mnemonic = "SBRC",
-            Operands = "Rr,b",
-            Description = "Skip if Bit Cleared",
-            Operation = "if (Rr(b) == 0) skip next instruction",
-            FlagsAffected = "None"
-        },
-        ["SBRS"] = new AvrInstructionInfo
-        {
-            Mnemonic = "SBRS",
-            Operands = "Rr,b",
-            Description = "Skip if Bit Set",
-            Operation = "if (Rr(b) == 1) skip next instruction",
-            FlagsAffected = "None"
-        },
-        ["SBIC"] = new AvrInstructionInfo
-        {
-            Mnemonic = "SBIC",
-            Operands = "A,b",
-            Description = "Skip if Bit in I/O Cleared",
-            Operation = "if (I/O(A,b) == 0) skip next instruction",
-            FlagsAffected = "None"
-        },
-        ["SBIS"] = new AvrInstructionInfo
-        {
-            Mnemonic = "SBIS",
-            Operands = "A,b",
-            Description = "Skip if Bit in I/O Set",
-            Operation = "if (I/O(A,b) == 1) skip next instruction",
-            FlagsAffected = "None"
-        },
-
-// Branch Instructions
-        ["BRBS"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRBS",
-            Operands = "s,k",
-            Description = "Branch if Flag Set",
-            Operation = "if (SREG(s) == 1) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRBC"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRBC",
-            Operands = "s,k",
-            Description = "Branch if Flag Cleared",
-            Operation = "if (SREG(s) == 0) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BREQ"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BREQ",
-            Operands = "k",
-            Description = "Branch if Equal",
-            Operation = "if (Z == 1) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRNE"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRNE",
-            Operands = "k",
-            Description = "Branch if Not Equal",
-            Operation = "if (Z == 0) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRCS"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRCS",
-            Operands = "k",
-            Description = "Branch if Carry Set",
-            Operation = "if (C == 1) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRCC"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRCC",
-            Operands = "k",
-            Description = "Branch if Carry Cleared",
-            Operation = "if (C == 0) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRMI"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRMI",
-            Operands = "k",
-            Description = "Branch if Minus",
-            Operation = "if (N == 1) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRPL"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRPL",
-            Operands = "k",
-            Description = "Branch if Plus",
-            Operation = "if (N == 0) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRGE"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRGE",
-            Operands = "k",
-            Description = "Branch if ≥ (Signed)",
-            Operation = "if (S == 0) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRLT"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRLT",
-            Operands = "k",
-            Description = "Branch if < (Signed)",
-            Operation = "if (S == 1) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRHS"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRHS",
-            Operands = "k",
-            Description = "Branch if Half Carry Set",
-            Operation = "if (H == 1) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRHC"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRHC",
-            Operands = "k",
-            Description = "Branch if Half Carry Cleared",
-            Operation = "if (H == 0) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRIE"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRIE",
-            Operands = "k",
-            Description = "Branch if Interrupt Enabled",
-            Operation = "if (I == 1) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
-        ["BRID"] = new AvrInstructionInfo
-        {
-            Mnemonic = "BRID",
-            Operands = "k",
-            Description = "Branch if Interrupt Disabled",
-            Operation = "if (I == 0) PC ← PC + k + 1",
-            FlagsAffected = "None"
-        },
+        
         
     };
 }
@@ -554,7 +637,7 @@ public class LssParser
                 if (AvrInstructionTable.Mnemonics.TryGetValue(mnemonicKey, out var info))
                 {
                     flags = info.FlagsAffected;
-                    symbol = info.Operation;
+                    symbol = info.GetOperation(mnemonic);
                 }
 
                 result.Add(new LssInstruction
@@ -571,49 +654,6 @@ public class LssParser
         }
 
         return result;
-    }
-
-    private string GetFlagsAffected(string mnemonic)
-    {
-        mnemonic = mnemonic.ToLower();
-        if (mnemonic.StartsWith("add")) return "Z,N,V,C";
-        if (mnemonic.StartsWith("adc")) return "Z,N,V,C";
-        if (mnemonic.StartsWith("sub")) return "Z,N,V,C";
-        if (mnemonic.StartsWith("ldi")) return "None";
-        if (mnemonic.StartsWith("mov")) return "None";
-        if (mnemonic.StartsWith("com")) return "Z,N,V";
-        if (mnemonic.StartsWith("dec")) return "Z,N,V";
-        if (mnemonic.StartsWith("brne")) return "None";
-        if (mnemonic.StartsWith("lpm")) return "None";
-        return "Unknown";
-    }
-
-    private string GetSymbolMeaning(string mnemonic)
-    {
-        var parts = mnemonic.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length < 2) return mnemonic;
-
-        switch (parts[0].ToLower())
-        {
-            case "ldi":
-                return $"{parts[1].ToUpper()} ← {parts[2]}";
-            case "mov":
-                return $"{parts[1].ToUpper()} ← {parts[2].ToUpper()}";
-            case "add":
-                return $"{parts[1].ToUpper()} ← {parts[1].ToUpper()} + {parts[2].ToUpper()}";
-            case "sub":
-                return $"{parts[1].ToUpper()} ← {parts[1].ToUpper()} - {parts[2].ToUpper()}";
-            case "dec":
-                return $"{parts[1].ToUpper()} ← {parts[1].ToUpper()} - 1";
-            case "com":
-                return $"{parts[1].ToUpper()} ← NOT {parts[1].ToUpper()}";
-            case "out":
-                return $"{parts[2].ToUpper()} ← {parts[1].ToUpper()}";
-            case "in":
-                return $"{parts[1].ToUpper()} ← {parts[2].ToUpper()}";
-            default:
-                return mnemonic;
-        }
     }
 }
 
